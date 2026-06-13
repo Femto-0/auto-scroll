@@ -4,6 +4,6 @@
 	"version": "1.0.0",
 	"minAppVersion": "1.0.0",
 	"description": "Automatically scrolls the editor while typing when the cursor reaches a configurable point in the viewport.",
-	"author": "hawtmeow",
+	"author": "femto",
 	"isDesktopOnly": false
 }
