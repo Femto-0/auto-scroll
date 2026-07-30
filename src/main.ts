@@ -1,5 +1,4 @@
 import { Notice, Plugin } from "obsidian";
-import { Prec } from "@codemirror/state";
 import { EditorView, ViewUpdate, keymap } from "@codemirror/view";
 import {
 	AutoScrollSettingTab,
@@ -46,17 +45,15 @@ export default class AutoScrollPlugin extends Plugin {
 				EditorView.updateListener.of((update: ViewUpdate) => {
 					this.handleEditorUpdate(update);
 				}),
-				Prec.highest(
-					keymap.of([
-						{
-							key: "ArrowDown",
-							run: (view) => {
-								this.handleArrowDown(view);
-								return false;
-							},
+				keymap.of([
+					{
+						key: "ArrowDown",
+						run: (view) => {
+							this.handleArrowDown(view);
+							return false;
 						},
-					]),
-				),
+					},
+				]),
 				EditorView.domEventHandlers({
 					mousemove: (event, view) => {
 						this.handleEditorMousemove(event, view);
@@ -103,7 +100,7 @@ export default class AutoScrollPlugin extends Plugin {
 			return;
 		}
 
-		requestAnimationFrame(() => {
+		window.requestAnimationFrame(() => {
 			view.scrollDOM.scrollBy({
 				top: this.settings.arrowDownScrollAmount,
 				behavior: this.settings.smoothScroll ? "smooth" : "auto",
@@ -183,12 +180,16 @@ export default class AutoScrollPlugin extends Plugin {
 		}
 
 		this.lastMouseFrameTime = 0;
-		this.mouseAnimationFrame = requestAnimationFrame(this.animateMouseScroll);
+		this.mouseAnimationFrame = window.requestAnimationFrame(
+			this.animateMouseScroll,
+		);
 	}
 
 	private stopMouseAutoScroll() {
 		if (this.mouseAnimationFrame !== null) {
-			cancelAnimationFrame(this.mouseAnimationFrame);
+			window.cancelAnimationFrame(
+				this.mouseAnimationFrame,
+			);
 			this.mouseAnimationFrame = null;
 		}
 
@@ -247,7 +248,9 @@ export default class AutoScrollPlugin extends Plugin {
 			return;
 		}
 
-		this.mouseAnimationFrame = requestAnimationFrame(this.animateMouseScroll);
+		this.mouseAnimationFrame = window.requestAnimationFrame(
+			this.animateMouseScroll,
+		);
 	};
 
 	private scrollByMousePosition(view: EditorView, viewportY: number) {

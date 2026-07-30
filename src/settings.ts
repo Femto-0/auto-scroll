@@ -119,7 +119,7 @@ export class AutoScrollSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Scroll while typing")
-			.setDesc("Scroll when the text cursor reaches the configured point after typing.")
+			.setDesc("Scroll after typing when the insertion point reaches the configured point.")
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.scrollOnTyping)
@@ -130,8 +130,8 @@ export class AutoScrollSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Scroll on Down arrow")
-			.setDesc("Move the viewport every time the Down arrow is pressed.")
+			.setName("Scroll on down arrow")
+			.setDesc("Move the viewport every time the down arrow is pressed.")
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.scrollOnArrowDown)
@@ -145,7 +145,7 @@ export class AutoScrollSettingTab extends PluginSettingTab {
 		if (this.plugin.settings.scrollOnArrowDown) {
 			new Setting(containerEl)
 				.setName("Down arrow scroll amount")
-				.setDesc("Pixels to move the viewport per Down arrow press.")
+				.setDesc("Pixels to move the viewport per down arrow press.")
 				.addSlider((slider) =>
 					slider
 						.setLimits(
