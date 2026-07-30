@@ -1,9 +1,9 @@
 {
 	"id": "auto-scroll",
 	"name": "Auto Scroll",
-	"version": "1.0.1",
-	"minAppVersion": "1.0.1",
-	"description": "Automatically scrolls the editor while typing when the cursor reaches a configurable point in the viewport.",
+	"version": "1.1.0",
+	"minAppVersion": "1.1.0",
+	"description": "Automatically scrolls the editor when the cursor reaches a configurable point in the viewport.",
 	"author": "femto",
 	"isDesktopOnly": false
 }
