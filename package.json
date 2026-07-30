@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-auto-scroll",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "Auto-scrolls the Obsidian editor while typing near the configured viewport threshold.",
 	"main": "main.js",
 	"type": "module",
