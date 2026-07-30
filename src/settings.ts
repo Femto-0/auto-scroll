@@ -3,6 +3,11 @@ import type AutoScrollPlugin from "./main";
 
 export interface AutoScrollSettings {
 	enabled: boolean;
+	scrollOnTyping: boolean;
+	scrollOnArrowDown: boolean;
+	arrowDownScrollAmount: number;
+	scrollOnMouseNearBottom: boolean;
+	scrollOnMouseNearTop: boolean;
 	requireNearDocumentBottom: boolean;
 	documentBottomThresholdPercent: number;
 	scrollThresholdPercent: number;
@@ -13,6 +18,11 @@ export interface AutoScrollSettings {
 
 export const DEFAULT_SETTINGS: AutoScrollSettings = {
 	enabled: true,
+	scrollOnTyping: true,
+	scrollOnArrowDown: true,
+	arrowDownScrollAmount: 48,
+	scrollOnMouseNearBottom: true,
+	scrollOnMouseNearTop: false,
 	requireNearDocumentBottom: false,
 	documentBottomThresholdPercent: 80,
 	scrollThresholdPercent: 80,
@@ -27,6 +37,8 @@ const MIN_DOCUMENT_DEPTH = 50;
 const MAX_DOCUMENT_DEPTH = 99;
 const MIN_SCROLL_AMOUNT = 24;
 const MAX_SCROLL_AMOUNT = 800;
+const MIN_ARROW_DOWN_SCROLL_AMOUNT = 4;
+const MAX_ARROW_DOWN_SCROLL_AMOUNT = 240;
 const MIN_SCROLL_COOLDOWN = 0;
 const MAX_SCROLL_COOLDOWN = 500;
 
@@ -35,6 +47,20 @@ export function clampSettings(
 ): AutoScrollSettings {
 	return {
 		enabled: settings.enabled ?? DEFAULT_SETTINGS.enabled,
+		scrollOnTyping: settings.scrollOnTyping ?? DEFAULT_SETTINGS.scrollOnTyping,
+		scrollOnArrowDown:
+			settings.scrollOnArrowDown ?? DEFAULT_SETTINGS.scrollOnArrowDown,
+		arrowDownScrollAmount: clampNumber(
+			settings.arrowDownScrollAmount,
+			MIN_ARROW_DOWN_SCROLL_AMOUNT,
+			MAX_ARROW_DOWN_SCROLL_AMOUNT,
+			DEFAULT_SETTINGS.arrowDownScrollAmount,
+		),
+		scrollOnMouseNearBottom:
+			settings.scrollOnMouseNearBottom ??
+			DEFAULT_SETTINGS.scrollOnMouseNearBottom,
+		scrollOnMouseNearTop:
+			settings.scrollOnMouseNearTop ?? DEFAULT_SETTINGS.scrollOnMouseNearTop,
 		requireNearDocumentBottom:
 			settings.requireNearDocumentBottom ??
 			DEFAULT_SETTINGS.requireNearDocumentBottom,
@@ -81,7 +107,7 @@ export class AutoScrollSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Enable auto-scroll")
-			.setDesc("Scroll the editor when typing reaches the configured point.")
+			.setDesc("Allow enabled triggers to scroll the editor.")
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.enabled)
@@ -92,8 +118,77 @@ export class AutoScrollSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
+			.setName("Scroll while typing")
+			.setDesc("Scroll when the text cursor reaches the configured point after typing.")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.scrollOnTyping)
+					.onChange(async (value) => {
+						this.plugin.settings.scrollOnTyping = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("Scroll on Down arrow")
+			.setDesc("Move the viewport every time the Down arrow is pressed.")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.scrollOnArrowDown)
+					.onChange(async (value) => {
+						this.plugin.settings.scrollOnArrowDown = value;
+						await this.plugin.saveSettings();
+						this.display();
+					}),
+			);
+
+		if (this.plugin.settings.scrollOnArrowDown) {
+			new Setting(containerEl)
+				.setName("Down arrow scroll amount")
+				.setDesc("Pixels to move the viewport per Down arrow press.")
+				.addSlider((slider) =>
+					slider
+						.setLimits(
+							MIN_ARROW_DOWN_SCROLL_AMOUNT,
+							MAX_ARROW_DOWN_SCROLL_AMOUNT,
+							4,
+						)
+						.setDynamicTooltip()
+						.setValue(this.plugin.settings.arrowDownScrollAmount)
+						.onChange(async (value) => {
+							this.plugin.settings.arrowDownScrollAmount = value;
+							await this.plugin.saveSettings();
+						}),
+				);
+		}
+
+		new Setting(containerEl)
+			.setName("Scroll with mouse near bottom")
+			.setDesc("Scroll when the mouse pointer reaches the configured point.")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.scrollOnMouseNearBottom)
+					.onChange(async (value) => {
+						this.plugin.settings.scrollOnMouseNearBottom = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName("Scroll with mouse near top")
+			.setDesc("Scroll upward when the mouse pointer reaches the top trigger zone.")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.scrollOnMouseNearTop)
+					.onChange(async (value) => {
+						this.plugin.settings.scrollOnMouseNearTop = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
 			.setName("Trigger point")
-			.setDesc("Viewport percentage where auto-scroll starts while typing.")
+			.setDesc("Viewport percentage where auto-scroll starts.")
 			.addSlider((slider) =>
 				slider
 					.setLimits(MIN_TRIGGER_POINT, MAX_TRIGGER_POINT, 1)
