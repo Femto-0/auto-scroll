@@ -42,6 +42,14 @@ const MAX_ARROW_DOWN_SCROLL_AMOUNT = 240;
 const MIN_SCROLL_COOLDOWN = 0;
 const MAX_SCROLL_COOLDOWN = 500;
 
+interface SettingDefinition {
+	name: string;
+	desc?: string;
+	aliases?: string[];
+	visible?: () => boolean;
+	render: (setting: Setting) => void;
+}
+
 export function clampSettings(
 	settings: Partial<AutoScrollSettings>,
 ): AutoScrollSettings {
@@ -98,6 +106,209 @@ export class AutoScrollSettingTab extends PluginSettingTab {
 	constructor(app: App, plugin: AutoScrollPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
+	}
+
+	getSettingDefinitions(): SettingDefinition[] {
+		return [
+			{
+				name: "Enable auto-scroll",
+				desc: "Allow enabled triggers to scroll the editor.",
+				aliases: ["auto scroll"],
+				render: (setting) => {
+					setting.addToggle((toggle) =>
+						toggle
+							.setValue(this.plugin.settings.enabled)
+							.onChange(async (value) => {
+								this.plugin.settings.enabled = value;
+								await this.plugin.saveSettings();
+							}),
+					);
+				},
+			},
+			{
+				name: "Scroll while typing",
+				desc: "Scroll after typing when the insertion point reaches the configured point.",
+				aliases: ["typing"],
+				render: (setting) => {
+					setting.addToggle((toggle) =>
+						toggle
+							.setValue(this.plugin.settings.scrollOnTyping)
+							.onChange(async (value) => {
+								this.plugin.settings.scrollOnTyping = value;
+								await this.plugin.saveSettings();
+							}),
+					);
+				},
+			},
+			{
+				name: "Scroll on down arrow",
+				desc: "Move the viewport every time the down arrow is pressed.",
+				aliases: ["arrow down", "keyboard"],
+				render: (setting) => {
+					setting.addToggle((toggle) =>
+						toggle
+							.setValue(this.plugin.settings.scrollOnArrowDown)
+							.onChange(async (value) => {
+								this.plugin.settings.scrollOnArrowDown = value;
+								await this.plugin.saveSettings();
+								this.updateSettings();
+							}),
+					);
+				},
+			},
+			{
+				name: "Down arrow scroll amount",
+				desc: "Pixels to move the viewport per down arrow press.",
+				aliases: ["arrow down", "keyboard"],
+				visible: () => this.plugin.settings.scrollOnArrowDown,
+				render: (setting) => {
+					setting.addSlider((slider) =>
+						slider
+							.setLimits(
+								MIN_ARROW_DOWN_SCROLL_AMOUNT,
+								MAX_ARROW_DOWN_SCROLL_AMOUNT,
+								4,
+							)
+							.setDynamicTooltip()
+							.setValue(this.plugin.settings.arrowDownScrollAmount)
+							.onChange(async (value) => {
+								this.plugin.settings.arrowDownScrollAmount = value;
+								await this.plugin.saveSettings();
+							}),
+					);
+				},
+			},
+			{
+				name: "Scroll with mouse near bottom",
+				desc: "Scroll when the mouse pointer reaches the configured point.",
+				aliases: ["mouse", "bottom"],
+				render: (setting) => {
+					setting.addToggle((toggle) =>
+						toggle
+							.setValue(this.plugin.settings.scrollOnMouseNearBottom)
+							.onChange(async (value) => {
+								this.plugin.settings.scrollOnMouseNearBottom = value;
+								await this.plugin.saveSettings();
+							}),
+					);
+				},
+			},
+			{
+				name: "Scroll with mouse near top",
+				desc: "Scroll upward when the mouse pointer reaches the top trigger zone.",
+				aliases: ["mouse", "top"],
+				render: (setting) => {
+					setting.addToggle((toggle) =>
+						toggle
+							.setValue(this.plugin.settings.scrollOnMouseNearTop)
+							.onChange(async (value) => {
+								this.plugin.settings.scrollOnMouseNearTop = value;
+								await this.plugin.saveSettings();
+							}),
+					);
+				},
+			},
+			{
+				name: "Trigger point",
+				desc: "Viewport percentage where auto-scroll starts.",
+				aliases: ["threshold"],
+				render: (setting) => {
+					setting.addSlider((slider) =>
+						slider
+							.setLimits(MIN_TRIGGER_POINT, MAX_TRIGGER_POINT, 1)
+							.setDynamicTooltip()
+							.setValue(this.plugin.settings.scrollThresholdPercent)
+							.onChange(async (value) => {
+								this.plugin.settings.scrollThresholdPercent = value;
+								await this.plugin.saveSettings();
+							}),
+					);
+				},
+			},
+			{
+				name: "Maximum scroll step",
+				desc: "Maximum pixels to scroll per trigger.",
+				aliases: ["scroll amount"],
+				render: (setting) => {
+					setting.addSlider((slider) =>
+						slider
+							.setLimits(MIN_SCROLL_AMOUNT, MAX_SCROLL_AMOUNT, 8)
+							.setDynamicTooltip()
+							.setValue(this.plugin.settings.scrollAmount)
+							.onChange(async (value) => {
+								this.plugin.settings.scrollAmount = value;
+								await this.plugin.saveSettings();
+							}),
+					);
+				},
+			},
+			{
+				name: "Scroll cooldown",
+				desc: "Minimum milliseconds between automatic scrolls.",
+				aliases: ["delay"],
+				render: (setting) => {
+					setting.addSlider((slider) =>
+						slider
+							.setLimits(MIN_SCROLL_COOLDOWN, MAX_SCROLL_COOLDOWN, 25)
+							.setDynamicTooltip()
+							.setValue(this.plugin.settings.scrollCooldownMs)
+							.onChange(async (value) => {
+								this.plugin.settings.scrollCooldownMs = value;
+								await this.plugin.saveSettings();
+							}),
+					);
+				},
+			},
+			{
+				name: "Only near document bottom",
+				desc: "Require the editor to be near the configured document depth before scrolling.",
+				aliases: ["document bottom"],
+				render: (setting) => {
+					setting.addToggle((toggle) =>
+						toggle
+							.setValue(this.plugin.settings.requireNearDocumentBottom)
+							.onChange(async (value) => {
+								this.plugin.settings.requireNearDocumentBottom = value;
+								await this.plugin.saveSettings();
+								this.updateSettings();
+							}),
+					);
+				},
+			},
+			{
+				name: "Document depth",
+				desc: "Document percentage where auto-scroll becomes active.",
+				aliases: ["document bottom"],
+				visible: () => this.plugin.settings.requireNearDocumentBottom,
+				render: (setting) => {
+					setting.addSlider((slider) =>
+						slider
+							.setLimits(MIN_DOCUMENT_DEPTH, MAX_DOCUMENT_DEPTH, 1)
+							.setDynamicTooltip()
+							.setValue(this.plugin.settings.documentBottomThresholdPercent)
+							.onChange(async (value) => {
+								this.plugin.settings.documentBottomThresholdPercent = value;
+								await this.plugin.saveSettings();
+							}),
+					);
+				},
+			},
+			{
+				name: "Smooth scrolling",
+				desc: "Animate the scroll movement.",
+				aliases: ["animation"],
+				render: (setting) => {
+					setting.addToggle((toggle) =>
+						toggle
+							.setValue(this.plugin.settings.smoothScroll)
+							.onChange(async (value) => {
+								this.plugin.settings.smoothScroll = value;
+								await this.plugin.saveSettings();
+							}),
+					);
+				},
+			},
+		];
 	}
 
 	display(): void {
@@ -268,6 +479,17 @@ export class AutoScrollSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					}),
 			);
+	}
+
+	private updateSettings() {
+		const settingTab = this as { update?: () => void };
+
+		if (settingTab.update) {
+			settingTab.update();
+			return;
+		}
+
+		this.display();
 	}
 }
 

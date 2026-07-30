@@ -1,4 +1,5 @@
 import { Notice, Plugin } from "obsidian";
+import { Prec } from "@codemirror/state";
 import { EditorView, ViewUpdate, keymap } from "@codemirror/view";
 import {
 	AutoScrollSettingTab,
@@ -45,15 +46,17 @@ export default class AutoScrollPlugin extends Plugin {
 				EditorView.updateListener.of((update: ViewUpdate) => {
 					this.handleEditorUpdate(update);
 				}),
-				keymap.of([
-					{
-						key: "ArrowDown",
-						run: (view) => {
-							this.handleArrowDown(view);
-							return false;
+				Prec.highest(
+					keymap.of([
+						{
+							key: "ArrowDown",
+							run: (view) => {
+								this.handleArrowDown(view);
+								return false;
+							},
 						},
-					},
-				]),
+					]),
+				),
 				EditorView.domEventHandlers({
 					mousemove: (event, view) => {
 						this.handleEditorMousemove(event, view);
