@@ -19,7 +19,7 @@ export interface AutoScrollSettings {
 export const DEFAULT_SETTINGS: AutoScrollSettings = {
 	enabled: true,
 	scrollOnTyping: true,
-	scrollOnArrowDown: true,
+	scrollOnArrowDown: false,
 	arrowDownScrollAmount: 48,
 	scrollOnMouseNearBottom: true,
 	scrollOnMouseNearTop: false,
