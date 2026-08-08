@@ -99,16 +99,18 @@ export default class AutoScrollPlugin extends Plugin {
 	}
 
 	private handleArrowDown(view: EditorView) {
-		if (!this.settings.enabled || !this.settings.scrollOnArrowDown) {
-			return;
+		if (this.settings.enabled) {
+			if (this.settings.scrollOnArrowDown) {
+				window.requestAnimationFrame(() => {
+					view.scrollDOM.scrollBy({
+						top: this.settings.arrowDownScrollAmount,
+						behavior: this.settings.smoothScroll ? "smooth" : "auto",
+					});
+				});
+			} else {
+				this.scrollIfPastThreshold(view);
+			}
 		}
-
-		window.requestAnimationFrame(() => {
-			view.scrollDOM.scrollBy({
-				top: this.settings.arrowDownScrollAmount,
-				behavior: this.settings.smoothScroll ? "smooth" : "auto",
-			});
-		});
 	}
 
 	private handleEditorMousemove(event: MouseEvent, view: EditorView) {
