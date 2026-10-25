@@ -119,7 +119,7 @@ export class AutoScrollSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		new Setting(containerEl).setName("Master Control").setHeading();
+		new Setting(containerEl).setName("Master control").setHeading();
 		new Setting(containerEl)
 			.setName("Enable auto-scroll")
 			.setDesc("Turn all automatic scrolling features on or off.")
@@ -128,8 +128,8 @@ export class AutoScrollSettingTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 			}));
 		new Setting(containerEl)
-			.setName("Keep cursor visible during navigation")
-			.setDesc("After any cursor movement, including Vim motions, scroll only when the cursor leaves the band set by Trigger point.")
+			.setName("Keep Cursor visible during navigation")
+			.setDesc("After any Cursor movement, including vim motions, scroll only when the Cursor leaves the band set by trigger point.")
 			.addToggle((toggle) => toggle.setValue(this.plugin.settings.keepCursorVisible).onChange(async (value) => {
 				this.plugin.settings.keepCursorVisible = value;
 				await this.plugin.saveSettings();
@@ -144,8 +144,8 @@ export class AutoScrollSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl).setName("Arrow key steps").setHeading();
 		new Setting(containerEl)
-			.setName("Scroll on Down arrow")
-			.setDesc("Add a fixed viewport step whenever Down is pressed.")
+			.setName("Scroll on down arrow")
+			.setDesc("Add a fixed viewport step whenever down is pressed.")
 			.addToggle((toggle) => toggle.setValue(this.plugin.settings.scrollOnArrowDown).onChange(async (value) => {
 				this.plugin.settings.scrollOnArrowDown = value;
 				await this.plugin.saveSettings();
@@ -153,8 +153,8 @@ export class AutoScrollSettingTab extends PluginSettingTab {
 			}));
 		if (this.plugin.settings.scrollOnArrowDown) this.addArrowAmount(containerEl, "Down");
 		new Setting(containerEl)
-			.setName("Scroll on Up arrow")
-			.setDesc("Add a fixed viewport step whenever Up is pressed.")
+			.setName("Scroll on up arrow")
+			.setDesc("Add a fixed viewport step whenever up is pressed.")
 			.addToggle((toggle) => toggle.setValue(this.plugin.settings.scrollOnArrowUp).onChange(async (value) => {
 				this.plugin.settings.scrollOnArrowUp = value;
 				await this.plugin.saveSettings();
@@ -165,7 +165,7 @@ export class AutoScrollSettingTab extends PluginSettingTab {
 		new Setting(containerEl).setName("Viewport and mouse").setHeading();
 		new Setting(containerEl)
 			.setName("Trigger point")
-			.setDesc("Sets the bottom edge of the cursor's visible band; the top edge mirrors it. Mouse scrolling uses the matching edge zones.")
+			.setDesc("Sets the bottom edge of the Cursor's visible band; the top edge mirrors it. Mouse scrolling uses the matching edge zones.")
 			.addSlider((slider) => slider.setLimits(MIN_TRIGGER_POINT, MAX_TRIGGER_POINT, 1).setDynamicTooltip()
 				.setValue(this.plugin.settings.scrollThresholdPercent).onChange(async (value) => {
 					this.plugin.settings.scrollThresholdPercent = value;
