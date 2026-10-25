@@ -24,6 +24,7 @@ export default class AutoScrollPlugin extends Plugin {
 	private mouseAnimationView: EditorView | null = null;
 	private mouseViewportY: number | null = null;
 	private lastMouseFrameTime = 0;
+	private cursorScrollFrame: number | null = null;
 
 	async onload() {
 		await this.loadSettings();
@@ -49,6 +50,13 @@ export default class AutoScrollPlugin extends Plugin {
 				Prec.highest(
 					keymap.of([
 						{
+							key: "ArrowUp",
+							run: (view) => {
+								this.handleArrowUp(view);
+								return false;
+							},
+						},
+						{
 							key: "ArrowDown",
 							run: (view) => {
 								this.handleArrowDown(view);
@@ -71,6 +79,9 @@ export default class AutoScrollPlugin extends Plugin {
 
 	onunload() {
 		this.stopMouseAutoScroll();
+		if (this.cursorScrollFrame !== null) {
+			window.cancelAnimationFrame(this.cursorScrollFrame);
+		}
 	}
 
 	async loadSettings() {
@@ -89,6 +100,12 @@ export default class AutoScrollPlugin extends Plugin {
 	}
 
 	private handleEditorUpdate(update: ViewUpdate) {
+		// Selection updates cover keyboard navigation and Vim motions, including
+		// motions that do not change the document.
+		if (this.settings.enabled && this.settings.keepCursorVisible && update.selectionSet) {
+			this.scheduleCursorAlignment(update.view);
+		}
+
 		if (
 			this.settings.enabled &&
 			this.settings.scrollOnTyping &&
@@ -100,16 +117,64 @@ export default class AutoScrollPlugin extends Plugin {
 
 	private handleArrowDown(view: EditorView) {
 		if (this.settings.enabled) {
-			if (this.settings.scrollOnArrowDown) {
-				window.requestAnimationFrame(() => {
-					view.scrollDOM.scrollBy({
-						top: this.settings.arrowDownScrollAmount,
-						behavior: this.settings.smoothScroll ? "smooth" : "auto",
-					});
+			this.handleArrowScroll(view, 1);
+		}
+	}
+
+	private handleArrowUp(view: EditorView) {
+		if (this.settings.enabled) {
+			this.handleArrowScroll(view, -1);
+		}
+	}
+
+	private handleArrowScroll(view: EditorView, direction: -1 | 1) {
+		const isEnabled = direction === 1
+			? this.settings.scrollOnArrowDown
+			: this.settings.scrollOnArrowUp;
+		if (isEnabled) {
+			const amount = direction === 1
+				? this.settings.arrowDownScrollAmount
+				: this.settings.arrowUpScrollAmount;
+			window.requestAnimationFrame(() => {
+				view.scrollDOM.scrollBy({
+					top: amount * direction,
+					behavior: this.settings.smoothScroll ? "smooth" : "auto",
 				});
-			} else {
-				this.scrollIfPastThreshold(view);
+			});
+		}
+	}
+
+	private scheduleCursorAlignment(view: EditorView) {
+		if (this.cursorScrollFrame !== null) {
+			window.cancelAnimationFrame(this.cursorScrollFrame);
+		}
+		this.cursorScrollFrame = window.requestAnimationFrame(() => {
+			this.cursorScrollFrame = null;
+			if (this.settings.enabled && view.dom.isConnected) {
+				this.alignCursorToViewportBand(view);
 			}
+		});
+	}
+
+	private alignCursorToViewportBand(view: EditorView) {
+		const scrollEl = view.scrollDOM;
+		const cursor = view.coordsAtPos(view.state.selection.main.head);
+		if (!cursor || scrollEl.clientHeight <= 0) return;
+
+		const scrollRect = scrollEl.getBoundingClientRect();
+		const topLimit = (scrollEl.clientHeight * (100 - this.settings.scrollThresholdPercent)) / 100;
+		const bottomLimit = (scrollEl.clientHeight * this.settings.scrollThresholdPercent) / 100;
+		let delta = 0;
+		if (cursor.top < scrollRect.top + topLimit) {
+			delta = cursor.top - (scrollRect.top + topLimit);
+		} else if (cursor.bottom > scrollRect.top + bottomLimit) {
+			delta = cursor.bottom - (scrollRect.top + bottomLimit);
+		}
+		if (delta !== 0) {
+			// Cursor navigation can happen repeatedly during a Vim motion. Smooth
+			// scroll animations overlap in that case and use stale cursor positions,
+			// which can send the viewport to a paragraph boundary.
+			scrollEl.scrollTop += delta;
 		}
 	}
 
