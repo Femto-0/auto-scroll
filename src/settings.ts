@@ -119,7 +119,7 @@ export class AutoScrollSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		new Setting(containerEl).setName("General").setHeading();
+		new Setting(containerEl).setName("Master Control").setHeading();
 		new Setting(containerEl)
 			.setName("Enable auto-scroll")
 			.setDesc("Turn all automatic scrolling features on or off.")
